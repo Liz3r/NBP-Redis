@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './App.css';
 import { render } from '@testing-library/react';
 import { socket } from './Socket';
@@ -11,24 +11,40 @@ function Menu(){
 
   //fetch fun
 
+  const usernameInputRef = useRef(null);
+  const channelInputRef = useRef(null);
+  
+  const createChannel = () => {
+    fetch(`http://localhost:3001/createChannel/${channelInputRef.current.value}/${usernameInputRef.current.value}`,{
+      method: "POST"
+    }).then(res => {
+      res.json()
+    }).then(r => {
+      console.log(r);
+    });
+  }
+
   return(
     <div className='menu-div'>
 
       <div>
         <p>Username</p>
-        <input></input>
+        <input
+          ref={usernameInputRef}
+        ></input>
         <p>Channel name</p>
-        <input></input>
+        <input
+          ref={channelInputRef}
+        ></input>
       </div>
 
       <div className='menu-buttons-div'>
-      <button onClick={() => {
-        //fetch call
-      }}>
+      <button onClick={createChannel}>
         Create channel
       </button>
       <button onClick={() => {
         //fetch call
+        
       }}>
         Join channel
       </button>
