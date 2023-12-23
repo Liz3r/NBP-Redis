@@ -1,21 +1,27 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext, createContext } from 'react';
 import './App.css';
 import { render } from '@testing-library/react';
 import { socket } from './Socket';
+import Lobby from './Lobby';
 
 
 
-
+export const appContext = createContext(null);
 
 function Menu(){
 
   const [errorMsg,setErrorMsg] = useState('');
 
+  const { state, setState } = useContext(appContext);
+
   const usernameInputRef = useRef(null);
   const channelInputRef = useRef(null);
+
   
   const createChannel = () => {
-    fetch(`http://localhost:3001/createChannel/${channelInputRef.current.value}/${usernameInputRef.current.value}`,{
+    const channel = channelInputRef.current.value;
+    const player = usernameInputRef.current.value;
+    fetch(`http://localhost:3001/createChannel/${channel}/${player}`,{
       method: "POST"
     }).then(res => {
       return res.json();
@@ -24,6 +30,7 @@ function Menu(){
         console.log(data.message);
         setErrorMsg('');
         //promeni app state i prikazi lobby komponentu
+        setState({show: 'lobby',channel: channel});
       }else{
         setErrorMsg(data.message);
       }
@@ -33,7 +40,9 @@ function Menu(){
   }
 
   const joinChannel = () => {
-    fetch(`http://localhost:3001/joinChannel/${channelInputRef.current.value}/${usernameInputRef.current.value}`,{
+    const channel = channelInputRef.current.value;
+    const player = usernameInputRef.current.value;
+    fetch(`http://localhost:3001/joinChannel/${channel}/${player}`,{
       method: "POST"
     }).then(res => {
       return res.json();
@@ -42,6 +51,7 @@ function Menu(){
         console.log(data.message);
         setErrorMsg('');
         //promeni app state i prikazi lobby komponentu
+        setState({show: 'lobby',channel: channel});
       }else{
         setErrorMsg(data.message);
       }
@@ -79,9 +89,14 @@ function Menu(){
 
 function App() {
   
+  const [state, setState] = useState({show: 'menu', channel: ''});
 
   return (
-    <Menu/>
+    <appContext.Provider value = {{state: state, setState: (newState) => setState(newState)}}>
+      {
+        (state.show == 'menu')? <Menu/> : (state.show == 'lobby')? <Lobby/> : (state.show == 'game')
+      }
+    </appContext.Provider>
   );
 }
 
