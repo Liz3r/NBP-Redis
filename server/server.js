@@ -32,17 +32,36 @@ app.post("/createChannel/:channel/:username", async (req,res) => {
     let channel_name = req.params.channel;
     let player_name = req.params.username;
 
-    console.log(channel_name,player_name);
-    let ret = await cli.get("activeChannels",(err,reply) => {
-        console.log(reply);
-        if(!reply){
-            console.log("aa");
+    let ret = await cli.sMembers("ActiveChannels", (err, reply) => { 
+        if(err){
+            res.status(400).send({error: err});
         }
     });
 
-    console.log(ret);
+    if(!ret.includes(channel_name)){
+
+
+        //dodavanje novog kanala u listu aktivnih kanala
+        let result = await cli.sAdd("ActiveChannels",channel_name, (err, reply) => { 
+            if(err){
+                res.status(400).send({error: err});
+            }
+        });
+        //dodavanje korisnika u kanal
+        let result2 = await cli.sAdd(channel_name,player_name, (err, reply) => { 
+            if(err){
+                res.status(400).send({error: err});
+            }
+        });
+        if(result == 1 && result2 == 1){
+            res.status(200).send({message: "User added to new channel."});
+        }
+
+    }else{
+
+        res.status(200).send({message: "Channel already exists."});
+    }
     
-    res.status(200).send({message: "success"});
 })
 
 app.listen(port, () => {

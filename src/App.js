@@ -9,7 +9,7 @@ import { socket } from './Socket';
 
 function Menu(){
 
-  //fetch fun
+  const [errorMsg,setErrorMsg] = useState('');
 
   const usernameInputRef = useRef(null);
   const channelInputRef = useRef(null);
@@ -20,7 +20,8 @@ function Menu(){
     }).then(res => {
       res.json()
     }).then(r => {
-      console.log(r);
+      //console.log(r);
+      //setErrorMsg('greska zbog neke nepredvidjene okolnosti');
     });
   }
 
@@ -49,7 +50,7 @@ function Menu(){
         Join channel
       </button>
       </div>
-
+      <div className='err-div'>{errorMsg}</div>
     </div>
   );
 }
