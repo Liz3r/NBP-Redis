@@ -18,10 +18,35 @@ function Menu(){
     fetch(`http://localhost:3001/createChannel/${channelInputRef.current.value}/${usernameInputRef.current.value}`,{
       method: "POST"
     }).then(res => {
-      res.json()
-    }).then(r => {
-      //console.log(r);
-      //setErrorMsg('greska zbog neke nepredvidjene okolnosti');
+      return res.json();
+    }).then(data => {
+      if(data.success == true){
+        console.log(data.message);
+        setErrorMsg('');
+        //promeni app state i prikazi lobby komponentu
+      }else{
+        setErrorMsg(data.message);
+      }
+    }).catch(err => {
+      console.log("Error: " + err);
+    });
+  }
+
+  const joinChannel = () => {
+    fetch(`http://localhost:3001/joinChannel/${channelInputRef.current.value}/${usernameInputRef.current.value}`,{
+      method: "POST"
+    }).then(res => {
+      return res.json();
+    }).then(data => {
+      if(data.success == true){
+        console.log(data.message);
+        setErrorMsg('');
+        //promeni app state i prikazi lobby komponentu
+      }else{
+        setErrorMsg(data.message);
+      }
+    }).catch(err => {
+      console.log("Error: " + err);
     });
   }
 
@@ -43,10 +68,7 @@ function Menu(){
       <button onClick={createChannel}>
         Create channel
       </button>
-      <button onClick={() => {
-        //fetch call
-        
-      }}>
+      <button onClick={joinChannel}>
         Join channel
       </button>
       </div>

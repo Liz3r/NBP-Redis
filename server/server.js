@@ -32,17 +32,16 @@ app.post("/createChannel/:channel/:username", async (req,res) => {
     let channel_name = req.params.channel;
     let player_name = req.params.username;
 
-    let ret = await cli.sMembers("ActiveChannels", (err, reply) => { 
+    let ret = await cli.sIsMember("AllChannels", channel_name, (err, reply) => { 
         if(err){
             res.status(400).send({error: err});
         }
     });
-
-    if(!ret.includes(channel_name)){
-
+    
+    if(!ret){
 
         //dodavanje novog kanala u listu aktivnih kanala
-        let result = await cli.sAdd("ActiveChannels",channel_name, (err, reply) => { 
+        let result = await cli.sAdd("AllChannels",channel_name, (err, reply) => { 
             if(err){
                 res.status(400).send({error: err});
             }
@@ -54,14 +53,64 @@ app.post("/createChannel/:channel/:username", async (req,res) => {
             }
         });
         if(result == 1 && result2 == 1){
-            res.status(200).send({message: "User added to new channel."});
+            res.status(200).send({
+                success: true,
+                message: "User added to new channel."
+            });
         }
-
     }else{
-
-        res.status(200).send({message: "Channel already exists."});
+        res.status(200).send({
+            success: false,
+            message: "Channel already exists."
+        });
     }
     
+})
+
+app.post("/joinChannel/:channel/:username", async (req,res) => {
+    const channel_name = req.params.channel;
+    const player_name = req.params.username;
+
+    let isMemberAll = await cli.sIsMember("AllChannels", channel_name);
+
+    if(!isMemberAll){
+        res.status(200).send({
+            success: false,
+            message: `Channel ${channel_name} does not exist.`
+        });
+        return;
+    }
+
+    let isMemberStarted = await cli.sIsMember("StartedChannels", channel_name);
+    if(isMemberStarted){
+        res.status(200).send({
+            success: false,
+            message: `Game has already started on channel "${channel_name}".`
+        });
+        return;
+    }
+
+    let nameInChannel = await cli.sIsMember(channel_name, player_name);
+    if(nameInChannel){
+        res.status(200).send({
+            success: false,
+            message: `Player with that name is already present in channel "${channel_name}".`
+        });
+        return;
+    }
+
+    let addUser = await cli.sAdd(channel_name, player_name, (err, reply) => { 
+        if(err){
+            res.status(400).send({error: err});
+            return;
+        }
+    });
+
+    res.status(200).send({
+        success: true,
+        message: "User has joined the channel"
+    });
+    return;
 })
 
 app.listen(port, () => {
