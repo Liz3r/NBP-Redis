@@ -1,10 +1,26 @@
 const express = require("express");
 const redis = require("redis");
 const cors = require("cors");
+const io = require("socket.io")(4000, {
+    cors: {
+        origin: ["http://localhost:3000"]
+    }
+});
+
+io.on('connection', (socket) =>{
+    console.log("connected: " + socket.id);
+    socket.on('disconnect', () => {
+        console.log("disconnected: " + socket.id);
+    })
+    socket.on('kurcinela', (player, channel) => {
+        console.log(`new connection: ${player} , ${channel}`);
+    });
+})
+
+
 
 const app = express();
 const port = 3001;
-
 
 
 const cli = redis.createClient();
