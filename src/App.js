@@ -1,12 +1,15 @@
-import { useState, useRef, useContext, createContext } from 'react';
+import { useState, useRef, useContext, createContext, useEffect, useLayoutEffect} from 'react';
 import './App.css';
-import { render } from '@testing-library/react';
 import { socket } from './Socket';
 import Lobby from './Lobby';
 
 
 
+const redis = require('redis');
+
 export const appContext = createContext(null);
+export const socketContext = createContext(null);
+
 
 function Menu(){
 
@@ -31,6 +34,8 @@ function Menu(){
         setErrorMsg('');
         //promeni app state i prikazi lobby komponentu
         setState({show: 'lobby',channel: channel});
+        // const sub = redis.createClient();
+        // sub.subscribe()
       }else{
         setErrorMsg(data.message);
       }
@@ -52,6 +57,7 @@ function Menu(){
         setErrorMsg('');
         //promeni app state i prikazi lobby komponentu
         setState({show: 'lobby',channel: channel});
+        
       }else{
         setErrorMsg(data.message);
       }
@@ -90,12 +96,49 @@ function Menu(){
 function App() {
   
   const [state, setState] = useState({show: 'menu', channel: ''});
+  //socket state
+  const [isConnected, setIsConnected] = useState(socket.connected);
+
+  useEffect(() => {
+    checkStorage();
+    
+    function onConnect(){
+      socket.setIsConnected(true);
+    }
+
+    function onDisconnect(){
+      socket.setIsConnected(false);
+    }
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+
+    return () => {
+      socket.off('connect',onConnect);
+      socket.off('disconnect',onDisconnect);
+    }
+
+  }, []);
+
+  const checkStorage = () =>{
+    let showSS = sessionStorage.getItem("show");
+    let channelSS = sessionStorage.getItem("channel");
+    if(showSS){
+      setState({show: showSS, channel: channelSS});
+    }
+  }
 
   return (
-    <appContext.Provider value = {{state: state, setState: (newState) => setState(newState)}}>
+    <appContext.Provider value = {{state: state, setState: (newState) => {
+      sessionStorage.setItem("show", newState.show);
+      sessionStorage.setItem("channel", newState.channel);
+      setState(newState);
+      }}}>
+        <socketContext.Provider value= {{isConnected: isConnected}}>
       {
-        (state.show == 'menu')? <Menu/> : (state.show == 'lobby')? <Lobby/> : (state.show == 'game')
+        (state.show == 'menu')? <Menu/> : (state.show == 'lobby')? <Lobby/> : <></> //: (state.show == 'game')
       }
+      </socketContext.Provider>
     </appContext.Provider>
   );
 }
