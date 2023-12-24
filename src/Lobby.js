@@ -8,7 +8,7 @@ function Lobby(){
     const { state, setState } = useContext(appContext);
 
     const emitMessage = () => {
-        socket.emit('kurcinela', "kurcina", "debelamasna");
+        socket.emit('event', state.player, state.channel);
     }
    
     return(

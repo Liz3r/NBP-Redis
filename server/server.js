@@ -12,7 +12,7 @@ io.on('connection', (socket) =>{
     socket.on('disconnect', () => {
         console.log("disconnected: " + socket.id);
     })
-    socket.on('kurcinela', (player, channel) => {
+    socket.on('event', (player, channel) => {
         console.log(`new connection: ${player} , ${channel}`);
     });
 })
