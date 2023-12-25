@@ -1,6 +1,6 @@
 import { useState, useRef, useContext, createContext, useEffect, useLayoutEffect} from 'react';
 import './App.css';
-import Lobby from './Lobby';
+import Game from './Game';
 
 
 
@@ -28,8 +28,8 @@ function Menu(){
       if(data.success == true){
         console.log(data.message);
         setErrorMsg('');
-        //promeni app state i prikazi lobby komponentu
-        setState({show: 'lobby',channel: channel, player: player});
+        //promeni app state i prikazi game komponentu
+        setState({show: 'game',channel: channel, player: player});
         
       }else{
         setErrorMsg(data.message);
@@ -50,8 +50,8 @@ function Menu(){
       if(data.success == true){
         console.log(data.message);
         setErrorMsg('');
-        //promeni app state i prikazi lobby komponentu
-        setState({show: 'lobby',channel: channel, player: player});
+        //promeni app state i prikazi game komponentu
+        setState({show: 'game',channel: channel, player: player});
         
       }else{
         setErrorMsg(data.message);
@@ -113,7 +113,7 @@ function App() {
       setState(newState);
       }}}>
       {
-        (state.show == 'menu')? <Menu/> : (state.show == 'lobby')? <Lobby/> : <></> //: (state.show == 'game')
+        (state.show == 'menu')? <Menu/> : (state.show == 'game')? <Game/> : <></>
       }
     </appContext.Provider>
   );

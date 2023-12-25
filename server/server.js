@@ -8,13 +8,41 @@ const io = require("socket.io")(4000, {
 });
 
 io.on('connection', (socket) =>{
+
+
+    //connect redis subscriber
+    var sub = redis.createClient();
+    sub.connect();
+
+
     console.log("connected: " + socket.id);
+
+    //disconnect
     socket.on('disconnect', () => {
+        sub.disconnect();
         console.log("disconnected: " + socket.id);
-    })
-    socket.on('event', (player, channel) => {
-        console.log(`new connection: ${player} , ${channel}`);
     });
+
+    socket.on('subscribe', (player, channel_room) => {
+
+        if(player && channel_room){
+
+            socket.join(channel_room);
+
+            //channel_room - isto ime za sobu soketa i za kanal na redisu na koji je priljucen klijent
+            //listener se prosledjuje u subscribe funkciji (iako u dokumentaciji pise da se prosledjuje .on() funkciji)
+            sub.subscribe(channel_room, (message, channel_redis) => {
+                
+                //mora postojati bar 2 soketa u sobi (ako je samo jedan ne emituje mu se poruka iz nekog razloga). 
+                //U slucaju da se ne koristi .to(kanal) poruka se emituje i kada je samo jedan korisnik na kanalu)
+                socket.to(channel_room).emit("newmessage", `kanal: ${channel_redis} poruka: ${message}`);
+            });
+
+        }else{
+            console.log("wrong parameters");
+        }
+    });
+
 })
 
 
@@ -103,7 +131,7 @@ app.post("/joinChannel/:channel/:username", async (req,res) => {
         return;
     }
 
-    let numPlayers = await cli.sCard(channel);
+    let numPlayers = await cli.sCard(channel_name);
     if(numPlayers >= 2){
         res.status(200).send({
             success: false,
