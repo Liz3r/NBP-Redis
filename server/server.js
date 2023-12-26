@@ -9,19 +9,19 @@ const io = require("socket.io")(4000, {
 
 io.on('connection', (socket) =>{
 
-
+    console.log("The number of connected sockets: " + socket.adapter.sids.size);
     //connect redis subscriber
     var sub = redis.createClient();
     sub.connect();
-
 
     console.log("connected: " + socket.id);
 
     //disconnect
     socket.on('disconnect', () => {
-        sub.disconnect();
+        sub.quit();
         console.log("disconnected: " + socket.id);
     });
+
 
     socket.on('subscribe', (player, channel_room) => {
 
@@ -32,10 +32,11 @@ io.on('connection', (socket) =>{
             //channel_room - isto ime za sobu soketa i za kanal na redisu na koji je priljucen klijent
             //listener se prosledjuje u subscribe funkciji (iako u dokumentaciji pise da se prosledjuje .on() funkciji)
             sub.subscribe(channel_room, (message, channel_redis) => {
-                
+                console.log(message);
                 //mora postojati bar 2 soketa u sobi (ako je samo jedan ne emituje mu se poruka iz nekog razloga). 
                 //U slucaju da se ne koristi .to(kanal) poruka se emituje i kada je samo jedan korisnik na kanalu)
-                socket.to(channel_room).emit("newmessage", `kanal: ${channel_redis} poruka: ${message}`);
+                const poruka = JSON.parse(message);
+                socket.broadcast.to(channel_room).emit("newmessage", poruka);
             });
 
         }else{
@@ -157,9 +158,9 @@ app.post("/joinChannel/:channel/:username", async (req,res) => {
 
 //-----------------------------------------game-----------
 
-app.post('/startGame/:channel/:player', (req,res) => {
+//app.post('/startGame/:channel/:player', (req,res) => {
     
-})
+//})
 
 app.listen(port, () => {
     console.log(`Listening on ${port}`);

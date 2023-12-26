@@ -19,8 +19,11 @@ function Game(){
 
     //game state
     const [ gameStarted, setGameStarted ] = useState(false);
+    const [ isReady, setIsReady ] = useState({player: false, oponnent: false});
+
     const [ myTurn, setMyTurn ] = useState(null);
     const [ playerCards, setPlayerCards] = useState({cards: [], count: 0});
+
     
     
 
@@ -28,9 +31,11 @@ function Game(){
 
         function onMessage(message){
             console.log(message);
+            
         }
         
         function onConnect(){
+            socket.emit('subscribe', state.player, state.channel);
             setIsConnected(true);
         }
 
@@ -38,19 +43,23 @@ function Game(){
             setIsConnected(false);
         }
 
+        function onReady(){
 
-        socket.emit('subscribe', state.player, state.channel);
+        }
+
 
         
 
-        socket.on('newmessage', onMessage);
+        
+
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconect);
+        socket.on('newmessage', onMessage);
 
         return () => {
-            socket.off('newmessage',onmessage);
             socket.off('connect', onConnect);
             socket.off('disconnect', onDisconect);
+            socket.off('newmessage',onMessage);
         }
     }, [])
    
