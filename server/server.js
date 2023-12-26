@@ -155,6 +155,12 @@ app.post("/joinChannel/:channel/:username", async (req,res) => {
     return;
 })
 
+//-----------------------------------------game-----------
+
+app.post('/startGame/:channel/:player', (req,res) => {
+    
+})
+
 app.listen(port, () => {
     console.log(`Listening on ${port}`);
 })
