@@ -3,10 +3,16 @@ import { appContext } from "./App";
 import { socket } from "./Socket";
 
 
-function Player(){
+function Player({gameState, setGameState}){
     
+    const cards = gameState.cards;
+    const cardsList = (cards != 0)? cards.map((card,index) =>
+        <div id="card" className={card} value={card} key={index}></div>
+    ) : <></>;
     return (
-        <div>komponenta</div>
+        <div>
+            {cardsList}
+        </div>
     );
 }
 
@@ -38,6 +44,7 @@ function Game(){
                         }
                     }).then(data => {
                         console.log(data);
+                        setGameState(data);
                     }).catch(err => {
                         console.log("Error: " + err);
                     })
@@ -92,7 +99,7 @@ function Game(){
             </div>
             
             <div className="player-div">
-                {(isReady == true)? <Player/>:<button onClick={() => {Ready()}}>Ready</button>}
+                {(isReady == true)? <Player gameState={gameState} setGameState={(state) => setGameState(state)}/>:<button onClick={() => {Ready()}}>Ready</button>}
             </div>
         </div>
     );

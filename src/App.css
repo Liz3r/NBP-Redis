@@ -39,3 +39,24 @@ body{
   height: 100%;
   background: linear-gradient(rgb(255, 102, 0), rgb(255, 217, 0));
 }
+
+:root{
+  
+  --cardWidth: 110px;
+  --cardHeight: 160px;
+}
+/*------------------------------------------------*/
+#card{
+
+  background-image: url("./UNO-Front.png");
+  background-position: 0,0;
+  background-size: calc(var(--cardWidth)*10) calc(var(--cardHeight)*7);
+  width: var(--cardWidth);
+  height: var(--cardHeight);
+}
+
+#card:hover{
+  border: 3px solid rgb(81, 131, 240);
+  border-radius: 10px;
+}
+
