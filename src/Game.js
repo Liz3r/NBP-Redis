@@ -7,7 +7,7 @@ function Player({gameState, setGameState}){
     
     const cards = gameState.cards;
     const cardsList = (cards != 0)? cards.map((card,index) =>
-        <div id="card" className={card} value={card} key={index}></div>
+        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} value={card} key={index}></div>
     ) : <></>;
     return (
         <div>

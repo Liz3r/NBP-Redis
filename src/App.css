@@ -45,18 +45,56 @@ body{
   --cardWidth: 110px;
   --cardHeight: 160px;
 }
-/*------------------------------------------------*/
+/*--------------------CARDS----------------------------*/
 #card{
-
   background-image: url("./UNO-Front.png");
-  background-position: 0,0;
   background-size: calc(var(--cardWidth)*10) calc(var(--cardHeight)*7);
   width: var(--cardWidth);
   height: var(--cardHeight);
 }
-
 #card:hover{
   border: 3px solid rgb(81, 131, 240);
   border-radius: 10px;
 }
 
+.g{
+  background-position-y: calc(var(--cardHeight)*(-3));
+}
+.r{
+  background-position-y: 0;
+}
+.y{
+  background-position-y: calc(var(--cardHeight)*(-1));
+}
+.b{
+  background-position-y: calc(var(--cardHeight)*(-2));
+}
+
+.num1{
+  background-position-x: calc(var(--cardWidth)*0);
+}
+.num2{
+  background-position-x: calc(var(--cardWidth)*(-1));
+}
+.num3{
+  background-position-x: calc(var(--cardWidth)*(-2));
+}
+.num4{
+  background-position-x: calc(var(--cardWidth)*(-3));
+}
+.num5{
+  background-position-x: calc(var(--cardWidth)*(-4));
+}
+.num6{
+  background-position-x: calc(var(--cardWidth)*(-5));
+}
+.num7{
+  background-position-x: calc(var(--cardWidth)*(-6));
+}
+.num8{
+  background-position-x: calc(var(--cardWidth)*(-7));
+}
+.num9{
+  background-position-x: calc(var(--cardWidth)*(-8));
+}
+/*------------------------------------------------------------------*/
