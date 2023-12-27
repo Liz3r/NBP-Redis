@@ -19,21 +19,36 @@ function Game(){
 
     //game state
     const [ gameStarted, setGameStarted ] = useState(false);
-    const [ isReady, setIsReady ] = useState({player: false, oponnent: false});
-
-    const [ myTurn, setMyTurn ] = useState(null);
-    const [ playerCards, setPlayerCards] = useState({cards: [], count: 0});
-
-    
-    
+    const [ isReady, setIsReady ] = useState(false);
+    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});    
 
     useEffect(() => {
 
-        function onMessage(message){
-            console.log(message);
+        function onMessage(objectMessage){
+            //console.log(objectMessage);
             
+            switch(objectMessage.message){
+                case "start":
+                    console.log("game has started");
+                    fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                        method: 'GET'
+                    }).then(res=> {
+                        if(res.status === 200){
+                            return res.json();
+                        }
+                    }).then(data => {
+                        console.log(data);
+                    }).catch(err => {
+                        console.log("Error: " + err);
+                    })
+                    break;
+
+                default:
+                    console.log("unknown signal");
+                    break;
+            }
         }
-        
+
         function onConnect(){
             socket.emit('subscribe', state.player, state.channel);
             setIsConnected(true);
@@ -42,19 +57,13 @@ function Game(){
         function onDisconect(){
             setIsConnected(false);
         }
-
-        function onReady(){
-
-        }
-
-
         
-
-        
-
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconect);
         socket.on('newmessage', onMessage);
+
+
+        socket.connect();
 
         return () => {
             socket.off('connect', onConnect);
@@ -63,6 +72,19 @@ function Game(){
         }
     }, [])
    
+    function Ready(){
+
+        fetch(`http://localhost:3001/playerReady/${state.channel}/${state.player}`, {
+            method: "POST"
+        })
+        .then(res => {
+            if(res.status === 200){
+                sessionStorage.setItem("ready",true);
+                setIsReady(true);
+            }
+        });
+    }
+
     return(
         <div className="game-div">
             <div className="opponent-div">
@@ -70,7 +92,7 @@ function Game(){
             </div>
             
             <div className="player-div">
-                <Player></Player>
+                {(isReady == true)? <Player/>:<button onClick={() => {Ready()}}>Ready</button>}
             </div>
         </div>
     );

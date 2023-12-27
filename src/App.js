@@ -92,6 +92,7 @@ function App() {
   
   const [state, setState] = useState({show: 'menu', channel: '', player: ''});
 
+
   useEffect(() => {
     checkStorage();
   }, []);
@@ -100,9 +101,8 @@ function App() {
     let showSS = sessionStorage.getItem("show");
     let channelSS = sessionStorage.getItem("channel");
     let playerSS = sessionStorage.getItem("player");
-    if(showSS){
+    if(showSS)
       setState({show: showSS, channel: channelSS, player: playerSS});
-    }
   }
 
   return (
@@ -110,10 +110,11 @@ function App() {
       sessionStorage.setItem("show", newState.show);
       sessionStorage.setItem("channel", newState.channel);
       sessionStorage.setItem("player", newState.player);
+      sessionStorage.setItem("ready",false);
       setState(newState);
       }}}>
       {
-        (state.show == 'menu')? <Menu/> : (state.show == 'game')? <Game/> : <></>
+        (state.show == 'menu' || !state.show)? <Menu/> : (state.show == 'game')? <Game/> : <></>
       }
     </appContext.Provider>
   );
