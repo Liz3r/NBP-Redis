@@ -10,12 +10,24 @@ function Player({gameState, setGameState}){
         <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} value={card} key={index}></div>
     ) : <></>;
     return (
-        <div>
+        <div className="cards-div">
             {cardsList}
         </div>
     );
 }
 
+function Opponenet({gameState, setGameState}){
+
+    const opponentCards = [];
+    for(let i = 0; i < gameState.opponentCardNum; i++){
+        opponentCards.push(<div className="opponent-card" key={i}></div>)
+    }
+    return(
+        <div className="cards-div">
+            {opponentCards}
+        </div>
+    );
+}
 
 function Game(){
 
@@ -24,9 +36,8 @@ function Game(){
     const [ isConnected, setIsConnected] = useState(socket.connected);
 
     //game state
-    const [ gameStarted, setGameStarted ] = useState(false);
     const [ isReady, setIsReady ] = useState(false);
-    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});    
+    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false, gameStarted: false});    
 
     useEffect(() => {
 
@@ -44,6 +55,7 @@ function Game(){
                         }
                     }).then(data => {
                         console.log(data);
+                        sessionStorage.setItem("gameStarted",true);
                         setGameState(data);
                     }).catch(err => {
                         console.log("Error: " + err);
@@ -86,7 +98,6 @@ function Game(){
         })
         .then(res => {
             if(res.status === 200){
-                sessionStorage.setItem("ready",true);
                 setIsReady(true);
             }
         });
@@ -95,7 +106,12 @@ function Game(){
     return(
         <div className="game-div">
             <div className="opponent-div">
+                <Opponenet gameState={gameState} setGameState={(state) => setGameState(state)}/>
+            </div>
 
+            <div className="mid-div">
+                <div className="deck-card"></div>
+                <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
             </div>
             
             <div className="player-div">

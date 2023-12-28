@@ -211,12 +211,12 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     const player = req.params.player;
 
     let getTurnList = await cli.lRange(`turn:${channel}`,0,-1);
-    const oponnent = (getTurnList[0] == player)? getTurnList[1] : getTurnList[0];
+    const opponent = (getTurnList[0] == player)? getTurnList[1] : getTurnList[0];
     //trebalo bi da se doda mehanizam za autentifikaciju
     let getHand = await cli.lRange(`cards:${player}:${channel}`,0,-1);
     let getTableCard = await cli.get(`tableCard:${channel}`);
     let getPlayerCardNum = await cli.lLen(`cards:${player}:${channel}`);
-    let getOpponentCardNum = await cli.lLen(`cards:${oponnent}:${channel}`);
+    let getOpponentCardNum = await cli.lLen(`cards:${opponent}:${channel}`);
     let playerTurn = (getTurnList[0] == player);
     
 
@@ -224,8 +224,9 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
         cards: getHand,
         tableCard: getTableCard,
         playerCardNum: getPlayerCardNum,
-        oponnentCardNum: getOpponentCardNum,
-        myTurn: playerTurn
+        opponentCardNum: getOpponentCardNum,
+        myTurn: playerTurn,
+        gameStarted: true
     }
 
     console.log(data);

@@ -35,26 +35,60 @@ body{
 
 .game-div{
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   background: linear-gradient(rgb(255, 102, 0), rgb(255, 217, 0));
 }
 
+.player-div{
+  width: 100%;
+  height: 40%;
+}
+
+.opponent-div{
+  width: 100%;
+  height: 40%;
+}
+.mid-div{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 20%;
+}
+
+.cards-div{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 80%;
+  height: 100%;
+
+  align-items: center;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+/*--------------------CARDS----------------------------*/
 :root{
-  
   --cardWidth: 110px;
   --cardHeight: 160px;
 }
-/*--------------------CARDS----------------------------*/
+
 #card{
-  background-image: url("./UNO-Front.png");
+  background-image: url("./UNO-Front2.png");
   background-size: calc(var(--cardWidth)*10) calc(var(--cardHeight)*7);
   width: var(--cardWidth);
   height: var(--cardHeight);
+  margin-left: 1px;
+  margin-top: 5vh;
 }
 #card:hover{
   border: 3px solid rgb(81, 131, 240);
   border-radius: 10px;
+  min-width: var(--cardWidth);
+  min-height: var(--cardHeight);
 }
 
 .g{
@@ -96,5 +130,36 @@ body{
 }
 .num9{
   background-position-x: calc(var(--cardWidth)*(-8));
+}
+
+.opponent-card{
+  background-image: url("./UNO-Front2.png");
+  background-size: calc(var(--cardWidth)*10) calc(var(--cardHeight)*7);
+  width: var(--cardWidth);
+  height: var(--cardHeight);
+  background-position: calc(var(--cardWidth)*(-8)) calc(var(--cardHeight)*(-6));
+  margin-left: 1px;
+  margin-bottom: 5vh;
+}
+
+.deck-card{
+  position: fixed;
+  left: 7vw;
+  background-image: url("./UNO-Front2.png");
+  background-size: calc(var(--cardWidth)*10) calc(var(--cardHeight)*7);
+  width: var(--cardWidth);
+  height: var(--cardHeight);
+  background-position: calc(var(--cardWidth)*(-9)) calc(var(--cardHeight)*(0));
+  
+}
+.deck-card:hover {
+  box-shadow: 0px 20px 20px rgb(219, 43, 30);
+}
+
+.table-card{
+  position: fixed;
+  pointer-events: none;
+  right: calc(50vw - var(--cardWidth)/2);
+  margin-top: 0px !important;
 }
 /*------------------------------------------------------------------*/
