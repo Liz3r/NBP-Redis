@@ -160,11 +160,16 @@ const cards = [
     'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9',
     'y1', 'y2', 'y3', 'y4', 'y5', 'y6', 'y7', 'y8', 'y9',
     'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9',
-    's1', 's2' ];
+    'rp', 'gp', 'yp', 'bp',
+    'rs', 'gs', 'ys', 'bs' ];
+
+    // r - red, b - blue, y - yellow, g - green
+    // p -  +2
+    // s - skip
 
 function generateCard(){
     //let res = '';
-    let num = (Math.round(Math.random()*100)) % 38;
+    let num = (Math.round(Math.random()*100)) % 44;
     let res = cards[num];
     return res;
 }
@@ -174,17 +179,17 @@ app.post('/playerReady/:channel/:player', async (req,res) => {
     const player = req.params.player;
 
     await cli.sAdd(`${channel}:ready`,player);
-    const readyCount = await cli.sCard(`${channel}:ready`);
-    console.log(readyCount);
-    if(readyCount > 1){
-        const players = await cli.sMembers(`${channel}:ready`);
-        
+    
+    const players = await cli.sMembers(`${channel}:ready`);
+    console.log(players);
+    if(players.length > 1){
+
+        //console.log(players);
         let generatedTableCard = generateCard();
-        let firstTurnPlayerIndex = (Math.round(Math.random() * 10)) % 2;
+        //igrac koji nije na potezu
+        (((Math.round(Math.random() * 10)) % 2) == 0)? await cli.set(`turn:${channel}`, players[0]) : await cli.set(`turn:${channel}`, players[1]);
         //karta na stolu
         await cli.set(`tableCard:${channel}`,generatedTableCard);
-        //lista igraca [player1, player2]  (prvi u listi je na potezu pa se rotira lista)
-        (firstTurnPlayerIndex == 0)? await cli.rPush(`turn:${channel}`, players[0], players[1]) : await cli.rPush(`turn:${channel}`, players[1], players[0]);
 
         players.forEach(async (player) => {
 
@@ -200,8 +205,9 @@ app.post('/playerReady/:channel/:player', async (req,res) => {
         //ako se na tabli nadju +2 / +4 karte stekuju se dok neko ne pokrene izvlacenje novih karata (nakon toga se stek vraca na 1 kartu po izvlacenju)
         await cli.incr(`draw:${channel}:number`);
 
+        await cli.rename(`${channel}:ready`,`${channel}:started`);
+        
         await cli.publish(channel,JSON.stringify({message: "start"}));
-        await cli.del(`${channel}:ready`);
 
 
     }
@@ -213,18 +219,16 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     const channel = req.params.channel;
     const player = req.params.player;
 
-    let getTurnList = await cli.lRange(`turn:${channel}`,0,-1);
-    const opponent = (getTurnList[0] == player)? getTurnList[1] : getTurnList[0];
+    const players = await cli.sMembers(`${channel}:started`);
+    const opponent = (players[0] == player)? players[1] : players[0];
     //trebalo bi da se doda mehanizam za autentifikaciju
-    let getHand = await cli.lRange(`cards:${player}:${channel}`,0,-1);
-    let getTableCard = await cli.get(`tableCard:${channel}`);
-    let getPlayerCardNum = getHand.length;
-    //await cli.lLen(`cards:${player}:${channel}`);
-    let getOpponentCardNum = await cli.lLen(`cards:${opponent}:${channel}`);
-    let playerTurn = (getTurnList[0] == player);
-
+    const getHand = await cli.lRange(`cards:${player}:${channel}`,0,-1);
+    const getTableCard = await cli.get(`tableCard:${channel}`);
+    const getPlayerCardNum = getHand.length;
+    const getOpponentCardNum = await cli.lLen(`cards:${opponent}:${channel}`);
+    const playerTurn = (await cli.get(`turn:${channel}`) != player);
+    //console.log(getTurnList);
     
-
     const data = {
         cards: getHand,
         tableCard: getTableCard,
@@ -238,16 +242,12 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     res.status(200).send(data);
 })
 
-app.post('/play/:channel/:player/:card', (req,res) => {
-
-})
-
 app.post('/drawCard/:channel/:player', async (req,res) => {
     const channel = req.params.channel;
     const player = req.params.player;
 
-    const getTurn = await cli.lRange(`turn:${channel}`,0,-1);
-    if(getTurn[0] != player){
+    const getTurn = await cli.get(`turn:${channel}`);
+    if(getTurn[0] == player){
         res.status(200).send({
             success: false,
             message: "opponent's turn"
@@ -262,10 +262,10 @@ app.post('/drawCard/:channel/:player', async (req,res) => {
         newCards.push(generateCard());
     }
     await cli.rPush(`cards:${player}:${channel}`, newCards);
-    await cli.lPop(`turn:${channel}`);
-    await cli.rPush(`turn:${channel}`, player);
+    await cli.set(`turn:${channel}`,player);
+    await cli.set(`draw:${channel}:number`, "1");
 
-    await cli.publish(channel,JSON.stringify({message: "draw", player: player, count: howMany}));
+    await cli.publish(channel,JSON.stringify({message: "draw", player: player}));
 
     res.status(200).send({
         success: true,
@@ -275,6 +275,103 @@ app.post('/drawCard/:channel/:player', async (req,res) => {
 
 })
 
+app.post('/play/:channel/:player/:card', async (req,res) => {
+    const player = req.params.player;
+    const channel = req.params.channel;
+    const card = req.params.card;
+
+    const notTurn = await cli.get(`turn:${channel}`);
+    if(notTurn == player){
+        res.status(200).send({
+            success: false,
+            message: "opponent's turn"
+        });
+        return;
+    }
+
+    const playerCardColor = card.charAt(0);
+    const playerCardSign = card.charAt(1);
+
+    const tableCard = await cli.get(`tableCard:${channel}`);
+
+    const tableCardColor = tableCard.charAt(0);
+    const tableCardSign = tableCard.charAt(1);
+
+    //------------------------na dalje treba da se proveri
+    const drawMultipleCardsNum = await cli.get(`draw:${channel}:number`);
+    if(parseInt(drawMultipleCardsNum) > 1){
+        if(playerCardSign == "p"){
+            //play card
+            await cli.lRem(`cards:${player}:${channel}`, 1, card);
+            await cli.set(`turn:${channel}`, player);
+            await cli.incrBy(`draw:${channel}:number`, 2);
+            await cli.set(`tableCard:${channel}`, card);
+            await cli.publish(channel,JSON.stringify({message: "played", player: player}));
+            res.status(200).send({
+                success: true,
+                message: "played card",
+                myTurn: false,
+                tableCard: card
+            });
+            return;
+        }else{
+            res.status(200).send({
+                success: false,
+                message: "Invalid move"
+            });
+            return;
+        }
+    }
+
+    if(playerCardSign == tableCardSign){
+
+        let turn = false;
+        //ukloni kartu igracu
+        await cli.lRem(`cards:${player}:${channel}`, 1, card);
+        
+        if(playerCardSign != "s"){
+            //ako karta nije skip onda se menja potez (u suprotnom opet igra isti igrac)
+            await cli.set(`turn:${channel}`, player);
+            turn = true;
+        }
+        //zamena poteza obradjena
+
+        if(playerCardSign == "p"){
+            //za slucaj da je karta +2
+            await cli.incrBy(`draw:${channel}:number`, 2);
+        }
+
+        //zamena karte na stolu
+        await cli.set(`tableCard:${channel}`, card);
+
+        await cli.publish(channel,JSON.stringify({message: "played", player: player}));
+        res.status(200).send({
+            success: true,
+            message: "played card",
+            myTurn: turn,
+            tableCard: card
+        });
+
+    }else if(playerCardColor == tableCardColor){
+        await cli.lRem(`cards:${player}:${channel}`, 1, card);
+        await cli.set(`turn:${channel}`, player);
+        await cli.set(`tableCard:${channel}`, card);
+        await cli.publish(channel,JSON.stringify({message: "played", player: player}));
+        res.status(200).send({
+            success: true,
+            message: "played card",
+            myTurn: false,
+            tableCard: card
+        });
+        return;
+    }else{
+        res.status(200).send({
+            success: false,
+            message: "Invalid move"
+        });
+        return;
+    }
+})
 
 app.listen(port, () => {
     console.log(`Listening on ${port}`);

@@ -131,6 +131,34 @@ body{
 .num9{
   background-position-x: calc(var(--cardWidth)*(-8));
 }
+/*specijalne*/
+
+/*plus 2*/
+.specg.specp{
+  background-position: calc(var(--cardWidth)*(-7)) calc(var(--cardHeight)*(-4)); 
+}
+.specr.specp{
+  background-position: calc(var(--cardWidth)*(-4)) calc(var(--cardHeight)*(-4));
+}
+.specy.specp{
+  background-position: calc(var(--cardWidth)*(-5)) calc(var(--cardHeight)*(-4));
+}
+.specb.specp{
+  background-position: calc(var(--cardWidth)*(-6)) calc(var(--cardHeight)*(-4));
+}
+/*skip*/
+.specg.specs{
+  background-position: calc(var(--cardWidth)*(-3)) calc(var(--cardHeight)*(-4));
+}
+.specr.specs{
+  background-position: calc(var(--cardWidth)*(0)) calc(var(--cardHeight)*(-4));
+}
+.specy.specs{
+  background-position: calc(var(--cardWidth)*(-1)) calc(var(--cardHeight)*(-4));
+}
+.specb.specs{
+  background-position: calc(var(--cardWidth)*(-2)) calc(var(--cardHeight)*(-4));
+}
 
 .opponent-card{
   background-image: url("./UNO-Front2.png");
@@ -163,3 +191,4 @@ body{
   margin-top: 0px !important;
 }
 /*------------------------------------------------------------------*/
+

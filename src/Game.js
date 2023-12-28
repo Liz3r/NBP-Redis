@@ -5,9 +5,54 @@ import { socket } from "./Socket";
 
 function Player({gameState, setGameState}){
     
+
+    //const cardsRefList = useRef([]);
+    const { state, setState } = useContext(appContext);
+
+    //kriticna sekcija sto bi se reklo
+    function playCard(cardValue, index){
+        console.log("Playing: " + cardValue);
+        if(gameState.myTurn === true){
+            fetch(`http://localhost:3001/play/${state.channel}/${state.player}/${cardValue}`,{
+                method: 'POST'
+            }).then(res => {
+                if(res.status === 200){
+                    return res.json();
+                }
+            }).then(data => {
+                if(data.success === true){
+                    //const newState = {...gameState}
+                    //skine sebi jednu kartu + animacija ako je moguce
+                    // newState.tableCard = data.tableCard;
+                    // newState.myTurn = data.myTurn;
+                    // newState.playerCardNum = newState.playCardNum - 1;
+                    // newState.cards = newState.cards.splice(index,1);
+
+                    fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                        method: 'GET'
+                    }).then(res=> {
+                        if(res.status === 200){
+                            return res.json();
+                        }
+                    }).then(data => {
+                        setGameState(data);
+                    }).catch(err => {
+                        console.log("Error: " + err);
+                    })
+
+                    //setGameState(newState);
+                }
+            }).catch(err => {
+                console.log("error: " + err);
+            })
+        }
+    }
+    //------------------------------------------------------
     const cards = gameState.cards;
     const cardsList = (cards != 0)? cards.map((card,index) =>
-        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} value={card} key={index}></div>
+        (card.charAt(1) != "s" && card.charAt(1) != "p")?
+        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} key={index} onClick={() => playCard(card,index)}></div>
+        : <div id="card" className={`spec${card.charAt(0)} spec${card.charAt(1)}`} key={index} onClick={() => playCard(card)}></div>
     ) : <></>;
     return (
         <div className="cards-div">
@@ -68,15 +113,33 @@ function Game(){
                 case "draw":
                     if(objectMessage.player != state.player){
 
-                        const count = objectMessage.count;
-                        const newState = {...gameState}
-                        newState.opponentCardNum += parseInt(count);
-                        newState.myTurn = true;
-                        console.log(`draw function newState:`);
-                        console.log(newState)
-                        console.log(`draw function gameState:`);
-                        console.log(gameState);
-                        setGameState(newState);
+                        fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                            method: 'GET'
+                        }).then(res=> {
+                            if(res.status === 200){
+                                return res.json();
+                            }   
+                        }).then(data => {
+                            setGameState(data);
+                        }).catch(err => {
+                            console.log("Error: " + err);
+                        })
+                        
+                    }
+                    break;
+                case "played":
+                    if(objectMessage.player != state.player){
+                        fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                            method: 'GET'
+                        }).then(res=> {
+                            if(res.status === 200){
+                                return res.json();
+                            }   
+                        }).then(data => {
+                            setGameState(data);
+                        }).catch(err => {
+                            console.log("Error: " + err);
+                        })
                         
                     }
                     break;
