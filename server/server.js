@@ -22,7 +22,6 @@ io.on('connection', (socket) =>{
         console.log("disconnected: " + socket.id);
     });
 
-
     socket.on('subscribe', (player, channel_room) => {
 
         if(player && channel_room){
@@ -30,8 +29,9 @@ io.on('connection', (socket) =>{
             socket.join(channel_room);
 
             //listener se prosledjuje u subscribe funkciji (iako u dokumentaciji pise da se prosledjuje .on() funkciji)
-            sub.subscribe(channel_room, (message, channel_redis) => {
+            sub.subscribe(channel_room, (message) => {
                 const poruka = JSON.parse(message);
+                console.log(message);
                 socket.broadcast.to(channel_room).emit("newmessage", poruka);
             });
 
@@ -197,10 +197,13 @@ app.post('/playerReady/:channel/:player', async (req,res) => {
 
         });
 
+        //ako se na tabli nadju +2 / +4 karte stekuju se dok neko ne pokrene izvlacenje novih karata (nakon toga se stek vraca na 1 kartu po izvlacenju)
+        await cli.incr(`draw:${channel}:number`);
+
         await cli.publish(channel,JSON.stringify({message: "start"}));
         await cli.del(`${channel}:ready`);
 
-        
+
     }
 
     res.status(200).send();
@@ -215,9 +218,11 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     //trebalo bi da se doda mehanizam za autentifikaciju
     let getHand = await cli.lRange(`cards:${player}:${channel}`,0,-1);
     let getTableCard = await cli.get(`tableCard:${channel}`);
-    let getPlayerCardNum = await cli.lLen(`cards:${player}:${channel}`);
+    let getPlayerCardNum = getHand.length;
+    //await cli.lLen(`cards:${player}:${channel}`);
     let getOpponentCardNum = await cli.lLen(`cards:${opponent}:${channel}`);
     let playerTurn = (getTurnList[0] == player);
+
     
 
     const data = {
@@ -231,6 +236,43 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
 
     console.log(data);
     res.status(200).send(data);
+})
+
+app.post('/play/:channel/:player/:card', (req,res) => {
+
+})
+
+app.post('/drawCard/:channel/:player', async (req,res) => {
+    const channel = req.params.channel;
+    const player = req.params.player;
+
+    const getTurn = await cli.lRange(`turn:${channel}`,0,-1);
+    if(getTurn[0] != player){
+        res.status(200).send({
+            success: false,
+            message: "opponent's turn"
+        });
+        return;
+    }
+
+    const howMany = await cli.get(`draw:${channel}:number`);
+
+    const newCards = [];
+    for(let i = 0; i < howMany; i++){
+        newCards.push(generateCard());
+    }
+    await cli.rPush(`cards:${player}:${channel}`, newCards);
+    await cli.lPop(`turn:${channel}`);
+    await cli.rPush(`turn:${channel}`, player);
+
+    await cli.publish(channel,JSON.stringify({message: "draw", player: player, count: howMany}));
+
+    res.status(200).send({
+        success: true,
+        message: "draw succeded",
+        addCards: newCards
+    });
+
 })
 
 
