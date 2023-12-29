@@ -214,9 +214,12 @@ function Game(){
                 <Opponenet gameState={gameState} setGameState={(state) => setGameState(state)}/>
             </div>
 
-            {gameState.gameStarted? <div className="mid-div">
+            {(gameState.gameStarted)? <div className="mid-div">
                 <div className="deck-card" onClick={drawCard}></div>
-                <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
+                {(gameState.tableCard.charAt(1) != "s" && gameState.tableCard.charAt(1) != "p")?
+                    <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
+                :   <div id="card" className={`spec${gameState.tableCard.charAt(0)} spec${gameState.tableCard.charAt(1)} table-card`}></div>
+                }
             </div>
             :
             <></>

@@ -332,6 +332,7 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         if(playerCardSign != "s"){
             //ako karta nije skip onda se menja potez (u suprotnom opet igra isti igrac)
             await cli.set(`turn:${channel}`, player);
+            console.log("potez zamenjen, odigrana karta: "+ playerCardSign);
             turn = true;
         }
         //zamena poteza obradjena
