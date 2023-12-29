@@ -3,15 +3,14 @@ import { appContext } from "./App";
 import { socket } from "./Socket";
 
 
-function Player({gameState, setGameState}){
+function Player({props}){
     
 
     //const cardsRefList = useRef([]);
-    const { state, setState } = useContext(appContext);
+    const { state, setState, gameState, setGameState } = props;
 
-    //kriticna sekcija sto bi se reklo
-    function playCard(cardValue, index){
-        console.log("Playing: " + cardValue);
+    function playCard(cardValue,target){
+        console.log(target);
         if(gameState.myTurn === true){
             fetch(`http://localhost:3001/play/${state.channel}/${state.player}/${cardValue}`,{
                 method: 'POST'
@@ -20,13 +19,8 @@ function Player({gameState, setGameState}){
                     return res.json();
                 }
             }).then(data => {
+                console.log("Playing: " + cardValue);
                 if(data.success === true){
-                    //const newState = {...gameState}
-                    //skine sebi jednu kartu + animacija ako je moguce
-                    // newState.tableCard = data.tableCard;
-                    // newState.myTurn = data.myTurn;
-                    // newState.playerCardNum = newState.playCardNum - 1;
-                    // newState.cards = newState.cards.splice(index,1);
 
                     fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
                         method: 'GET'
@@ -34,13 +28,11 @@ function Player({gameState, setGameState}){
                         if(res.status === 200){
                             return res.json();
                         }
-                    }).then(data => {
-                        setGameState(data);
+                    }).then(gameData => {
+                        setGameState(gameData);
                     }).catch(err => {
                         console.log("Error: " + err);
                     })
-
-                    //setGameState(newState);
                 }
             }).catch(err => {
                 console.log("error: " + err);
@@ -51,8 +43,8 @@ function Player({gameState, setGameState}){
     const cards = gameState.cards;
     const cardsList = (cards != 0)? cards.map((card,index) =>
         (card.charAt(1) != "s" && card.charAt(1) != "p")?
-        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} key={index} onClick={() => playCard(card,index)}></div>
-        : <div id="card" className={`spec${card.charAt(0)} spec${card.charAt(1)}`} key={index} onClick={() => playCard(card)}></div>
+        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} key={index} onClick={(event) => playCard(card,event.currentTarget)}></div>
+        : <div id="card" className={`spec${card.charAt(0)} spec${card.charAt(1)}`} key={index} onClick={(event) => playCard(card,event.currentTarget)}></div>
     ) : <></>;
     return (
         <div className="cards-div">
@@ -74,20 +66,41 @@ function Opponenet({gameState, setGameState}){
     );
 }
 
-function Game(){
+function Game({props}){
 
-    const { state, setState } = useContext(appContext);
+    const { state, setState } = props;
 
     const [ isConnected, setIsConnected] = useState(socket.connected);
 
     //game state
-    const [ isReady, setIsReady ] = useState(false);
-    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false, gameStarted: false});    
-    console.log("new change of state:");
-    console.log(gameState);
-    useEffect(() => {
+    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});    
+    //console.log("new change of state:");
+    //console.log(gameState);
 
-        
+    useEffect(() => {
+        if(state.gameStarted == true){
+            console.log("Render child (<Game/>)")
+            console.log(state.gameStarted);
+            fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                        method: 'GET'
+                    }).then(res=> {
+                        if(res.status === 200){
+                            return res.json();
+                        }
+                    }).then(data => {
+                        console.log("fetched data");
+                        
+                        console.log(data);
+                        setGameState(data);
+                        
+                    }).catch(err => {
+                        console.log("Error: " + err);
+                    })
+        }
+        return;
+    },[state])
+
+    useEffect(() => {
 
         function onMessage(objectMessage){
             //console.log(objectMessage);
@@ -104,6 +117,10 @@ function Game(){
                     }).then(data => {
                         console.log(data);
                         sessionStorage.setItem("gameStarted",true);
+                        const currentState = {...state};
+                        currentState.gameStarted = true;
+                        //console.log()
+                        setState(currentState);
                         setGameState(data);
                     }).catch(err => {
                         console.log("Error: " + err);
@@ -179,7 +196,11 @@ function Game(){
         })
         .then(res => {
             if(res.status === 200){
-                setIsReady(true);
+                //setIsReady(true);
+                sessionStorage.setItem("isReady",true);
+                const currentState = {...state};
+                state.isReady = true;
+                setState(currentState);
             }
         });
     }
@@ -210,11 +231,12 @@ function Game(){
 
     return(
         <div className="game-div">
+            
             <div className="opponent-div">
                 <Opponenet gameState={gameState} setGameState={(state) => setGameState(state)}/>
             </div>
 
-            {(gameState.gameStarted)? <div className="mid-div">
+            {(state.gameStarted)? <div className="mid-div">
                 <div className="deck-card" onClick={drawCard}></div>
                 {(gameState.tableCard.charAt(1) != "s" && gameState.tableCard.charAt(1) != "p")?
                     <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
@@ -227,7 +249,7 @@ function Game(){
             
             
             <div className="player-div">
-                {(isReady == true)? <Player gameState={gameState} setGameState={(state) => setGameState(state)}/>:<button onClick={() => {Ready()}}>Ready</button>}
+                {(state.isReady == true)? <Player props={{state: state, setState: (state) => {setState(state)}, gameState:gameState, setGameState: (state) => {setGameState(state)}}}/>:<button onClick={() => {Ready()}}>Ready</button>}
             </div>
         </div>
     );

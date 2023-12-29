@@ -234,8 +234,7 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
         tableCard: getTableCard,
         playerCardNum: getPlayerCardNum,
         opponentCardNum: getOpponentCardNum,
-        myTurn: playerTurn,
-        gameStarted: true
+        myTurn: playerTurn
     }
 
     console.log(data);
@@ -300,7 +299,7 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
     //------------------------na dalje treba da se proveri
     const drawMultipleCardsNum = await cli.get(`draw:${channel}:number`);
     if(parseInt(drawMultipleCardsNum) > 1){
-        if(playerCardSign == "p"){
+        if(playerCardSign === "p"){
             //play card
             await cli.lRem(`cards:${player}:${channel}`, 1, card);
             await cli.set(`turn:${channel}`, player);
@@ -309,9 +308,7 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
             await cli.publish(channel,JSON.stringify({message: "played", player: player}));
             res.status(200).send({
                 success: true,
-                message: "played card",
-                myTurn: false,
-                tableCard: card
+                message: "played card"
             });
             return;
         }else{
@@ -323,23 +320,26 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         }
     }
 
-    if(playerCardSign == tableCardSign){
+    if(playerCardSign === tableCardSign){
 
-        let turn = false;
         //ukloni kartu igracu
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         
-        if(playerCardSign != "s"){
+        if(playerCardSign !== "s"){
             //ako karta nije skip onda se menja potez (u suprotnom opet igra isti igrac)
             await cli.set(`turn:${channel}`, player);
             console.log("potez zamenjen, odigrana karta: "+ playerCardSign);
-            turn = true;
         }
         //zamena poteza obradjena
 
-        if(playerCardSign == "p"){
+        if(playerCardSign === "p"){
             //za slucaj da je karta +2
-            await cli.incrBy(`draw:${channel}:number`, 2);
+            const trenutniDrawNum = cli.get(`draw:${channel}:number`);
+            if(parseInt(trenutniDrawNum) == 1){
+                await cli.incr(`draw:${channel}:number`);
+            }else{
+                await cli.incrBy(`draw:${channel}:number`, 2);
+            }
         }
 
         //zamena karte na stolu
@@ -348,21 +348,17 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         await cli.publish(channel,JSON.stringify({message: "played", player: player}));
         res.status(200).send({
             success: true,
-            message: "played card",
-            myTurn: turn,
-            tableCard: card
+            message: "played card"
         });
 
-    }else if(playerCardColor == tableCardColor){
+    }else if(playerCardColor === tableCardColor){
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         await cli.set(`turn:${channel}`, player);
         await cli.set(`tableCard:${channel}`, card);
         await cli.publish(channel,JSON.stringify({message: "played", player: player}));
         res.status(200).send({
             success: true,
-            message: "played card",
-            myTurn: false,
-            tableCard: card
+            message: "played card"
         });
         return;
     }else{

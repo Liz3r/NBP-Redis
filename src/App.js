@@ -7,11 +7,11 @@ import Game from './Game';
 export const appContext = createContext(null);
 
 
-function Menu(){
+function Menu({props}){
 
   const [errorMsg,setErrorMsg] = useState('');
 
-  const { state, setState } = useContext(appContext);
+  const { state, setState } = props;
 
   const usernameInputRef = useRef(null);
   const channelInputRef = useRef(null);
@@ -29,6 +29,9 @@ function Menu(){
         console.log(data.message);
         setErrorMsg('');
         //promeni app state i prikazi game komponentu
+        sessionStorage.setItem("show","game");
+        sessionStorage.setItem("channel", channel);
+        sessionStorage.setItem("player", player);
         setState({show: 'game',channel: channel, player: player});
         
       }else{
@@ -51,6 +54,9 @@ function Menu(){
         console.log(data.message);
         setErrorMsg('');
         //promeni app state i prikazi game komponentu
+        sessionStorage.setItem("show","game");
+        sessionStorage.setItem("channel", channel);
+        sessionStorage.setItem("player", player);
         setState({show: 'game',channel: channel, player: player});
         
       }else{
@@ -90,7 +96,7 @@ function Menu(){
 
 function App() {
   
-  const [state, setState] = useState({show: 'menu', channel: '', player: ''});
+  const [state, setState] = useState({show: 'menu', channel: '', player: '', isReady: false, gameStarted: false});
 
 
   useEffect(() => {
@@ -101,22 +107,32 @@ function App() {
     let showSS = sessionStorage.getItem("show");
     let channelSS = sessionStorage.getItem("channel");
     let playerSS = sessionStorage.getItem("player");
+    let isReadySS = (sessionStorage.getItem("isReady") == "true")? true: false;
+    let gameStartedSS = (sessionStorage.getItem("gameStarted") == "true")? true: false;
     if(showSS)
-      setState({show: showSS, channel: channelSS, player: playerSS});
+      setState({show: showSS, channel: channelSS, player: playerSS, isReady: isReadySS, gameStarted: gameStartedSS});
   }
 
   return (
-    <appContext.Provider value = {{state: state, setState: (newState) => {
-      sessionStorage.setItem("show", newState.show);
-      sessionStorage.setItem("channel", newState.channel);
-      sessionStorage.setItem("player", newState.player);
-      sessionStorage.setItem("ready",false);
-      setState(newState);
-      }}}>
-      {
-        (state.show == 'menu' || !state.show)? <Menu/> : (state.show == 'game')? <Game/> : <></>
-      }
-    </appContext.Provider>
+    
+        (state.show == 'menu' || !state.show)? <Menu props={{state: state, setState: (newState) => {
+          sessionStorage.setItem("show", newState.show);
+          sessionStorage.setItem("channel", newState.channel);
+          sessionStorage.setItem("player", newState.player);
+          sessionStorage.setItem("isReady", newState.isReady);
+          sessionStorage.setItem("gameStarted", newState.gameStarted);
+    
+          setState(newState);
+          }}}/> : (state.show == 'game')? <Game props={{state: state, setState: (newState) => {
+            sessionStorage.setItem("show", newState.show);
+            sessionStorage.setItem("channel", newState.channel);
+            sessionStorage.setItem("player", newState.player);
+            sessionStorage.setItem("isReady", newState.isReady);
+            sessionStorage.setItem("gameStarted", newState.gameStarted);
+      
+            setState(newState);
+            }}}/> : <></>
+      
   );
 }
 
