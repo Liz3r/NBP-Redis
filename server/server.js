@@ -227,8 +227,14 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     const getPlayerCardNum = getHand.length;
     const getOpponentCardNum = await cli.lLen(`cards:${opponent}:${channel}`);
     const playerTurn = (await cli.get(`turn:${channel}`) != player);
-    //console.log(getTurnList);
     
+    //ako neko vise nema karata emituje se signal za kraj igre
+    /*if(getPlayerCardNum == 0){
+        publish(channel,JSON.stringify({message: "finish", winner: player}));
+    }else if(getOpponentCardNum == 0){
+        publish(channel,JSON.stringify({message: "finish", winner: opponent}));
+    }*/
+
     const data = {
         cards: getHand,
         tableCard: getTableCard,
@@ -246,7 +252,7 @@ app.post('/drawCard/:channel/:player', async (req,res) => {
     const player = req.params.player;
 
     const getTurn = await cli.get(`turn:${channel}`);
-    if(getTurn[0] == player){
+    if(getTurn == player){
         res.status(200).send({
             success: false,
             message: "opponent's turn"
@@ -261,10 +267,10 @@ app.post('/drawCard/:channel/:player', async (req,res) => {
         newCards.push(generateCard());
     }
     await cli.rPush(`cards:${player}:${channel}`, newCards);
-    await cli.set(`turn:${channel}`,player);
-    await cli.set(`draw:${channel}:number`, "1");
+    await cli.set(`turn:${channel}`, player);
+    await cli.set(`draw:${channel}:number`, 1);
 
-    await cli.publish(channel,JSON.stringify({message: "draw", player: player}));
+    await cli.publish(channel,JSON.stringify({message: "played", player: player}));
 
     res.status(200).send({
         success: true,
@@ -328,7 +334,6 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         if(playerCardSign !== "s"){
             //ako karta nije skip onda se menja potez (u suprotnom opet igra isti igrac)
             await cli.set(`turn:${channel}`, player);
-            console.log("potez zamenjen, odigrana karta: "+ playerCardSign);
         }
         //zamena poteza obradjena
 
@@ -353,7 +358,19 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
 
     }else if(playerCardColor === tableCardColor){
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
-        await cli.set(`turn:${channel}`, player);
+        if(playerCardSign !== "s"){
+            await cli.set(`turn:${channel}`, player);
+            console.log("potez zamenjen, odigrana karta: "+ playerCardSign);
+        }
+        if(playerCardSign === "p"){
+            //za slucaj da je karta +2
+            const trenutniDrawNum = cli.get(`draw:${channel}:number`);
+            if(parseInt(trenutniDrawNum) == 1){
+                await cli.incr(`draw:${channel}:number`);
+            }else{
+                await cli.incrBy(`draw:${channel}:number`, 2);
+            }
+        }
         await cli.set(`tableCard:${channel}`, card);
         await cli.publish(channel,JSON.stringify({message: "played", player: player}));
         res.status(200).send({

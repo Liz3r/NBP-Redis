@@ -1,16 +1,13 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState, useRef, createElement } from "react";
 import { appContext } from "./App";
 import { socket } from "./Socket";
-
 
 function Player({props}){
     
 
-    //const cardsRefList = useRef([]);
     const { state, setState, gameState, setGameState } = props;
 
-    function playCard(cardValue,target){
-        console.log(target);
+    function playCard(cardValue){
         if(gameState.myTurn === true){
             fetch(`http://localhost:3001/play/${state.channel}/${state.player}/${cardValue}`,{
                 method: 'POST'
@@ -19,7 +16,7 @@ function Player({props}){
                     return res.json();
                 }
             }).then(data => {
-                console.log("Playing: " + cardValue);
+                //console.log("Playing: " + cardValue);
                 if(data.success === true){
 
                     fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
@@ -43,8 +40,8 @@ function Player({props}){
     const cards = gameState.cards;
     const cardsList = (cards != 0)? cards.map((card,index) =>
         (card.charAt(1) != "s" && card.charAt(1) != "p")?
-        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} key={index} onClick={(event) => playCard(card,event.currentTarget)}></div>
-        : <div id="card" className={`spec${card.charAt(0)} spec${card.charAt(1)}`} key={index} onClick={(event) => playCard(card,event.currentTarget)}></div>
+        <div id="card" className={`${card.charAt(0)} num${card.charAt(1)}`} key={index} onClick={() => playCard(card)}></div>
+        : <div id="card" className={`spec${card.charAt(0)} spec${card.charAt(1)}`} key={index} onClick={() => playCard(card)}></div>
     ) : <></>;
     return (
         <div className="cards-div">
@@ -71,11 +68,7 @@ function Game({props}){
     const { state, setState } = props;
 
     const [ isConnected, setIsConnected] = useState(socket.connected);
-
-    //game state
-    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});    
-    //console.log("new change of state:");
-    //console.log(gameState);
+    const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});
 
     useEffect(() => {
         if(state.gameStarted == true){
@@ -89,7 +82,6 @@ function Game({props}){
                         }
                     }).then(data => {
                         console.log("fetched data");
-                        
                         console.log(data);
                         setGameState(data);
                         
@@ -103,8 +95,7 @@ function Game({props}){
     useEffect(() => {
 
         function onMessage(objectMessage){
-            //console.log(objectMessage);
-            
+
             switch(objectMessage.message){
                 case "start":
                     console.log("game has started");
@@ -126,24 +117,6 @@ function Game({props}){
                         console.log("Error: " + err);
                     })
                     break;
-                
-                case "draw":
-                    if(objectMessage.player != state.player){
-
-                        fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
-                            method: 'GET'
-                        }).then(res=> {
-                            if(res.status === 200){
-                                return res.json();
-                            }   
-                        }).then(data => {
-                            setGameState(data);
-                        }).catch(err => {
-                            console.log("Error: " + err);
-                        })
-                        
-                    }
-                    break;
                 case "played":
                     if(objectMessage.player != state.player){
                         fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
@@ -159,6 +132,10 @@ function Game({props}){
                         })
                         
                     }
+                    break;
+                case "finish":
+                    //obradi signal za kraj partije
+                    
                     break;
                 default:
                     console.log("unknown signal");
@@ -215,13 +192,17 @@ function Game({props}){
                 }
             }).then(data => {
                 if(data.success === true){
-                    const newState = {...gameState}
-                    
-                    newState.cards.push(...data.addCards);
-                    newState.myTurn = false;
-                    console.log(newState);
-                    setGameState(newState);
-                    //animacija
+                    fetch(`http://localhost:3001/getPlayerState/${state.channel}/${state.player}`,{
+                            method: 'GET'
+                        }).then(res=> {
+                            if(res.status === 200){
+                                return res.json();
+                            }   
+                        }).then(data => {
+                            setGameState(data);
+                        }).catch(err => {
+                            console.log("Error: " + err);
+                        })
                 }
             }).catch(err => {
                 console.log("error: " + err);
