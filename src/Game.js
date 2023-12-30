@@ -135,7 +135,7 @@ function Game({props}){
                     break;
                 case "finish":
                     //obradi signal za kraj partije
-                    
+                    console.log("game over");
                     break;
                 default:
                     console.log("unknown signal");
@@ -166,7 +166,7 @@ function Game({props}){
         }
     }, [])
    
-    function Ready(){
+    function Ready(target){
 
         fetch(`http://localhost:3001/playerReady/${state.channel}/${state.player}`, {
             method: "POST"
@@ -177,6 +177,8 @@ function Game({props}){
                 sessionStorage.setItem("isReady",true);
                 const currentState = {...state};
                 state.isReady = true;
+                target.disabled = true;
+                target.innerHTML = "Waiting for opponent";
                 setState(currentState);
             }
         });
@@ -231,7 +233,7 @@ function Game({props}){
             
             
             <div className="player-div">
-                {(state.isReady == true)? <Player props={{state: state, setState: (state) => {setState(state)}, gameState:gameState, setGameState: (state) => {setGameState(state)}}}/>:<button onClick={() => {Ready()}}>Ready</button>}
+                {(state.isReady == true)? <Player props={{state: state, setState: (state) => {setState(state)}, gameState:gameState, setGameState: (state) => {setGameState(state)}}}/>:<button className="ready-button" onClick={(event) => {Ready(event.currentTarget)}}>Start game</button>}
             </div>
         </div>
     );

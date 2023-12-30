@@ -228,11 +228,11 @@ app.get('/getPlayerState/:channel/:player', async (req, res) => {
     const playerTurn = (await cli.get(`turn:${channel}`) != player);
     
     //ako neko vise nema karata emituje se signal za kraj igre
-    /*if(getPlayerCardNum == 0){
-        publish(channel,JSON.stringify({message: "finish", winner: player}));
+    if(getPlayerCardNum == 0){
+        cli.publish(channel,JSON.stringify({message: "finish", winner: player}));
     }else if(getOpponentCardNum == 0){
-        publish(channel,JSON.stringify({message: "finish", winner: opponent}));
-    }*/
+        cli.publish(channel,JSON.stringify({message: "finish", winner: opponent}));
+    }
 
     const data = {
         cards: getHand,
