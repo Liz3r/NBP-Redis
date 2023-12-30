@@ -81,7 +81,7 @@ function Game({props}){
                             return res.json();
                         }
                     }).then(data => {
-                        console.log("fetched data");
+                        //console.log("fetched data");
                         console.log(data);
                         setGameState(data);
                         
@@ -223,6 +223,7 @@ function Game({props}){
                     <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
                 :   <div id="card" className={`spec${gameState.tableCard.charAt(0)} spec${gameState.tableCard.charAt(1)} table-card`}></div>
                 }
+                <h1 className="player-opponent-turn-text">{(gameState.myTurn)? "YOUR TURN": "OPPONENT'S TURN"}</h1>
             </div>
             :
             <></>

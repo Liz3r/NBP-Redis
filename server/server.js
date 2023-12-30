@@ -168,7 +168,6 @@ const cards = [
     // s - skip
 
 function generateCard(){
-    //let res = '';
     let num = (Math.round(Math.random()*100)) % 44;
     let res = cards[num];
     return res;
@@ -203,7 +202,7 @@ app.post('/playerReady/:channel/:player', async (req,res) => {
         });
 
         //ako se na tabli nadju +2 / +4 karte stekuju se dok neko ne pokrene izvlacenje novih karata (nakon toga se stek vraca na 1 kartu po izvlacenju)
-        await cli.incr(`draw:${channel}:number`);
+        await cli.set(`draw:${channel}:number`, 1);
 
         await cli.rename(`${channel}:ready`,`${channel}:started`);
         
@@ -302,9 +301,10 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
     const tableCardColor = tableCard.charAt(0);
     const tableCardSign = tableCard.charAt(1);
 
-    //------------------------na dalje treba da se proveri
     const drawMultipleCardsNum = await cli.get(`draw:${channel}:number`);
     if(parseInt(drawMultipleCardsNum) > 1){
+        console.log("draw multiple cards: "+drawMultipleCardsNum);
+
         if(playerCardSign === "p"){
             //play card
             await cli.lRem(`cards:${player}:${channel}`, 1, card);
@@ -327,7 +327,7 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
     }
 
     if(playerCardSign === tableCardSign){
-
+        console.log("Player card sign === table card sign: "+playerCardSign);
         //ukloni kartu igracu
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         
@@ -340,10 +340,10 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         if(playerCardSign === "p"){
             //za slucaj da je karta +2
             const trenutniDrawNum = cli.get(`draw:${channel}:number`);
-            if(parseInt(trenutniDrawNum) == 1){
-                await cli.incr(`draw:${channel}:number`);
-            }else{
+            if(parseInt(trenutniDrawNum) > 1){
                 await cli.incrBy(`draw:${channel}:number`, 2);
+            }else{
+                await cli.incr(`draw:${channel}:number`);
             }
         }
 
@@ -357,6 +357,8 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         });
 
     }else if(playerCardColor === tableCardColor){
+        console.log("Player card color === table card color: "+playerCardColor);
+
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         if(playerCardSign !== "s"){
             await cli.set(`turn:${channel}`, player);
@@ -365,10 +367,10 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         if(playerCardSign === "p"){
             //za slucaj da je karta +2
             const trenutniDrawNum = cli.get(`draw:${channel}:number`);
-            if(parseInt(trenutniDrawNum) == 1){
-                await cli.incr(`draw:${channel}:number`);
-            }else{
+            if(parseInt(trenutniDrawNum) > 1){
                 await cli.incrBy(`draw:${channel}:number`, 2);
+            }else{
+                await cli.incr(`draw:${channel}:number`);
             }
         }
         await cli.set(`tableCard:${channel}`, card);

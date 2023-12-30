@@ -192,17 +192,8 @@ body{
 }
 /*------------------------------------------------------------------*/
 
-.playCard{
+.player-opponent-turn-text{
   position: absolute;
-  pointer-events: none;
-  
-  animation-name: play;
-  animation-duration: 2s;
-}
-
-@keyframes play {
-  100%{
-    top: calc(50vh - var(--cardHeight)/2 - 50px);
-    left: calc(50vw - var(--cardWidth)/2);
-  }
+  right: 10vw;
+  width: 150px;
 }
