@@ -68,6 +68,7 @@ function Game({props}){
     const { state, setState } = props;
 
     const [ isConnected, setIsConnected] = useState(socket.connected);
+    const [ gameOver, setGameOver ] = useState({gameOver: false, message: ''});
     const [ gameState, setGameState] = useState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});
 
     useEffect(() => {
@@ -134,8 +135,20 @@ function Game({props}){
                     }
                     break;
                 case "finish":
-                    //obradi signal za kraj partije
                     console.log("game over");
+                    fetch(`http://localhost:3001/finishGame/${state.channel}/${state.player}`, {
+                        method: "POST"
+                    }).then(res=> {
+                        if(res.status === 200){
+                            if(state.player == objectMessage.winner){
+                                setGameOver({gameOver: true, message: "YOU WON"});
+                            }else{
+                                setGameOver({gameOver: true, message: "YOU LOST"});
+                            }
+                        }   
+                    }).catch(err => {
+                        console.log("Error: " + err);
+                    })
                     break;
                 default:
                     console.log("unknown signal");
@@ -212,7 +225,15 @@ function Game({props}){
         }
     }
 
+    function Leave(){
+        sessionStorage.clear();
+        setGameOver({gameOver: false, message: ''});
+        setGameState({cards: [], tableCard: '', playerCardNum: 0, opponentCardNum: 0, myTurn: false});
+        setState({show: 'menu', channel: '', player: '', isReady: false, gameStarted: false});
+    }
+
     return(
+        
         <div className="game-div">
             
             <div className="opponent-div">
@@ -221,20 +242,27 @@ function Game({props}){
 
             {(state.gameStarted)? <div className="mid-div">
                 <div className="deck-card" onClick={drawCard}></div>
+
                 {(gameState.tableCard.charAt(1) != "s" && gameState.tableCard.charAt(1) != "p")?
                     <div id="card" className={`${gameState.tableCard.charAt(0)} num${gameState.tableCard.charAt(1)} table-card`}></div>
-                :   <div id="card" className={`spec${gameState.tableCard.charAt(0)} spec${gameState.tableCard.charAt(1)} table-card`}></div>
-                }
+                :   <div id="card" className={`spec${gameState.tableCard.charAt(0)} spec${gameState.tableCard.charAt(1)} table-card`}></div>}
+
                 <h1 className="player-opponent-turn-text">{(gameState.myTurn)? "YOUR TURN": "OPPONENT'S TURN"}</h1>
-            </div>
-            :
-            <></>
-            }
-            
-            
+            </div> : <></>}
+        
             <div className="player-div">
                 {(state.isReady == true)? <Player props={{state: state, setState: (state) => {setState(state)}, gameState:gameState, setGameState: (state) => {setGameState(state)}}}/>:<button className="ready-button" onClick={(event) => {Ready(event.currentTarget)}}>Start game</button>}
             </div>
+    
+            {(gameOver.gameOver)? 
+            <div className="gameOver-div">
+            <div className="gameOver-menu-div">
+                <h1>GAME OVER</h1>
+                <h2>{gameOver.message}</h2>
+                <button className="leave-button" onClick={Leave}>Leave</button>
+            </div>
+        </div>
+        : <></>}
         </div>
     );
 }

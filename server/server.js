@@ -110,7 +110,7 @@ app.post("/joinChannel/:channel/:username", async (req,res) => {
         return;
     }
 
-    let isMemberStarted = await cli.sIsMember("StartedChannels", channel_name);
+    let isMemberStarted = await cli.sIsMember("LobbyChannels", channel_name);
     if(isMemberStarted){
         res.status(200).send({
             success: false,
@@ -303,7 +303,6 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
 
     const drawMultipleCardsNum = await cli.get(`draw:${channel}:number`);
     if(parseInt(drawMultipleCardsNum) > 1){
-        console.log("draw multiple cards: "+drawMultipleCardsNum);
 
         if(playerCardSign === "p"){
             //play card
@@ -327,7 +326,6 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
     }
 
     if(playerCardSign === tableCardSign){
-        console.log("Player card sign === table card sign: "+playerCardSign);
         //ukloni kartu igracu
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         
@@ -357,7 +355,6 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         });
 
     }else if(playerCardColor === tableCardColor){
-        console.log("Player card color === table card color: "+playerCardColor);
 
         await cli.lRem(`cards:${player}:${channel}`, 1, card);
         if(playerCardSign !== "s"){
@@ -387,6 +384,22 @@ app.post('/play/:channel/:player/:card', async (req,res) => {
         });
         return;
     }
+})
+
+app.post("/finishGame/:channel/:player", async (req, res) => {
+    const channel = req.params.channel;
+    const player = req.params.channel;
+
+    await cli.sRem("AllChannels",channel);
+    await cli.sRem("LobbyChannels",channel);
+    const players = await cli.sMembers(`${channel}:started`);
+    players.forEach(player => {
+        cli.del(`cards:${player}:${channel}`);
+    });
+    await cli.del([`turn:${channel}`, `tableCard:${channel}`, `${channel}:started`, `draw:${channel}:number`]);
+
+    res.status(200).send();
+    return;
 })
 
 app.listen(port, () => {
