@@ -1,70 +1,15 @@
-# Getting Started with Create React App
+#Pokretanje i korišćenje aplikacije:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. instalirati npm zavisnosti (node modules) komadnom: nmp install
+2. pokrenuti redis-server sa administratorskim privilegijama (testirano je sa windows build-om redisa 3.2.100)
+3. pokrenuti express iz početnog direktorijuma aplikacije komandom: npm run server
+4. pokrenuti react aplikaciju iz početnog direktorijuma aplikacije komandom: npm start
+5. otvoriti dva različita taba u browseru i konektovati se na http://localhost:3000
+6. u prvom tabu uneti korisničko ime pvog igrača i ime kanala a zatim klikom na dugme "create channel" kreira se kanal sa zadatim imenom i povezuje prvi igrač
+7. u drugom tabu uneti ime drugog igrača i ime kanala na koji se povezuje i povezati se na kanal klikom na dugme "join channel" (da bi igra mogla da počne potrebno je da se oba korisnika povežu na kanal sa istim imenom)
+8. nakon povezivanja potrebno je da oba igrača kliknu na dugme "Start" čime se inicijalizuje tabla i stanje igrača na serveru
+9. kada se izvrši inicijalizacija igre na serveru, server šalje signal igračima (pomoću pub-sub mehanizma i socket io) da je igra inicijalizovana i da mogu da preuzmu prikaz table sa redisa
+10. igrači naizmenično šalju svoje poteze (osim ukoliko je odigrana specijalna karta za preskakanje poteza) i updatuju svoj prikaz kada je novi potez odigran (signal da je odigran novi potez šalje se pomoću pub-sub mehanizma)
+11. igra je završena kada jedan od igrača više nema karata u ruci (šalje se signal za kraj partije sa imenom pobednika)
+12. nakon primljenog signala za kraj igre korisnici prikazju ekran za kraj partije i klikom na dugme "leave" vraćaju se na početni prikaz za priključenje/kreiranje kanala
+13. moguće je odigravanje većeg broja partija istovremeno na različitim kanalima
